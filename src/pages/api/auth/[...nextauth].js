@@ -41,7 +41,6 @@ export const authOptions = {
   },
   callbacks: {
     async jwt ({ token, account, user }) {
-      console.log(token, account, user)
       // initial signin
       if (account && user) {
         return {
