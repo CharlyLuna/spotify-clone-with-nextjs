@@ -5,14 +5,17 @@ import { useSession } from 'next-auth/react'
 import { COLORS } from '@/utils/constants'
 import { useEffect, useState } from 'react'
 import { shuffle } from 'lodash'
+import { useRecoilValue } from 'recoil'
+import { playlistIdState } from '@/atoms/playlistAtom'
 
 export const Center = () => {
   const { data: session } = useSession()
   const [color, setColor] = useState(null)
+  const playlistId = useRecoilValue(playlistIdState)
 
   useEffect(() => {
     setColor(shuffle(COLORS).pop())
-  }, [])
+  }, [playlistId])
 
   return (
     <div className='flex-grow text-white'>
