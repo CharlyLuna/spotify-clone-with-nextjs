@@ -5,17 +5,30 @@ import { useSession } from 'next-auth/react'
 import { COLORS } from '@/utils/constants'
 import { useEffect, useState } from 'react'
 import { shuffle } from 'lodash'
-import { useRecoilValue } from 'recoil'
-import { playlistIdState } from '@/atoms/playlistAtom'
+import { useRecoilState, useRecoilValue } from 'recoil'
+import { playlistState, playlistIdState } from '@/atoms/playlistAtom'
+import { useSpotify } from '@/hooks/useSpotify'
 
 export const Center = () => {
   const { data: session } = useSession()
+  const spotifyApi = useSpotify()
   const [color, setColor] = useState(null)
   const playlistId = useRecoilValue(playlistIdState)
+  const [playlist, setPlaylist] = useRecoilState(playlistState)
 
   useEffect(() => {
     setColor(shuffle(COLORS).pop())
   }, [playlistId])
+
+  useEffect(() => {
+    spotifyApi.getPlaylist(playlistId).then(({ body }) => {
+      setPlaylist(body)
+    }, (e) => {
+      console.log(e)
+    })
+  }, [playlistId, spotifyApi])
+
+  console.log(playlist)
 
   return (
     <div className='flex-grow text-white'>
@@ -32,8 +45,11 @@ export const Center = () => {
       <section className={`flex items-end space-x-7 
       bg-gradient-to-b to-black ${color} h-80`}
       >
-        <h1>hey</h1>
-        {/* <img src="" alt="" /> */}
+        <img className='h-44 w-44 shadow-2xl' src={playlist?.images?.[0].url} alt='' />
+        <div>
+          <p>PLAYLIST</p>
+          <h1 className='text-2xl md:text-3xl xl:text-5xl font-bold'>{playlist?.name}</h1>
+        </div>
       </section>
     </div>
   )
