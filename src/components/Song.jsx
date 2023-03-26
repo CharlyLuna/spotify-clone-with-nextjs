@@ -1,19 +1,39 @@
+import { currentTrackIdState, isPlayingState } from '@/atoms/songAtom'
 import { useSpotify } from '@/hooks/useSpotify'
 import { millisToMinutesAndSeconds } from '@/lib/time'
+import { useRecoilState } from 'recoil'
 
 export const Song = ({ track, order }) => {
   const spotifyApi = useSpotify()
+  const [currentTrackId, setCurrentTrackId] = useRecoilState(currentTrackIdState)
+  const [isPlaying, setIsPlaying] = useRecoilState(isPlayingState)
+
+  const playSong = async () => {
+    const { body } = await spotifyApi.getMyDevices()
+    if (body.devices.length <= 0) {
+      console.log('ERROR: NO DEVICES FOUND')
+      return
+    }
+    setCurrentTrackId(track.id)
+    setIsPlaying(true)
+    spotifyApi.play({
+      uris: [track.uri],
+      device_id: body.devices[0].id
+    })
+  }
 
   return (
-    <div className='grid grid-cols-2 text-gray-500 py-2
+    <div
+      className='grid grid-cols-2 text-gray-500 py-2
     px-5 hover:bg-gray-900 rounded-md cursor-pointer'
+      onClick={playSong}
     >
       <div className='flex items-center space-x-4'>
         <p>{order + 1}</p>
         <img className='h-10 w-10' src={track.album.images?.[0].url} />
         <div>
           <p className='w-36 lg:w-64 truncate text-white'>{track.name}</p>
-          <p className='w-40 truncate'>{track.artists[0].name}</p>
+          <p className='w-40'>{track.artists[0].name}</p>
         </div>
       </div>
       <div className='flex items-center justify-between ml-auto

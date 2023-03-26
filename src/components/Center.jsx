@@ -29,8 +29,6 @@ export const Center = () => {
     })
   }, [playlistId, spotifyApi])
 
-  console.log(playlist)
-
   return (
     <div className='flex-grow h-screen overflow-y-scroll scrollbar-hide text-white'>
       <header className='absolute top-5 right-8'>
