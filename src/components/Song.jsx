@@ -9,6 +9,7 @@ export const Song = ({ track, order }) => {
   const [isPlaying, setIsPlaying] = useRecoilState(isPlayingState)
 
   const playSong = async () => {
+    // Spotify api doesnt work without oficial spotify app open
     const { body } = await spotifyApi.getMyDevices()
     if (body.devices.length <= 0) {
       console.log('ERROR: NO DEVICES FOUND')
