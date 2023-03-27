@@ -1,17 +1,18 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useSpotify } from '@/hooks/useSpotify'
 import { useRecoilState } from 'recoil'
 import { currentTrackIdState, isPlayingState } from '@/atoms/songAtom'
 import { useSongInfo } from '@/hooks/useSongInfo'
-import { ArrowsRightLeftIcon, ArrowPathRoundedSquareIcon } from '@heroicons/react/24/outline'
-import { ForwardIcon, BackwardIcon, PlayCircleIcon, PauseCircleIcon } from '@heroicons/react/24/solid'
+import { ArrowsRightLeftIcon, ArrowPathRoundedSquareIcon, SpeakerWaveIcon as VolumeDownIcon } from '@heroicons/react/24/outline'
+import { ForwardIcon, BackwardIcon, PlayCircleIcon, PauseCircleIcon, SpeakerWaveIcon as VolumeUpIcon } from '@heroicons/react/24/solid'
+import { debounce } from 'lodash'
 
 export const Player = () => {
   const spotifyApi = useSpotify()
   const [currentTrackId, setCurrentTrackId] = useRecoilState(currentTrackIdState)
   const [isPlaying, setIsPlaying] = useRecoilState(isPlayingState)
-  const { data: session, status } = useSession()
+  const { data: session } = useSession()
   const [volume, setVolume] = useState(50)
   const songInfo = useSongInfo()
 
@@ -26,25 +27,37 @@ export const Player = () => {
     }
   }
 
-  useEffect(() => {
-    // get current song at the begining when we dont have a currentTrackId setted
-    if (spotifyApi.getAccessToken() && !currentTrackId) {
-      fetchCurrentSong()
-      setVolume(50)
-    }
-  }, [currentTrackId, spotifyApi, session])
-
   const handlePlayPause = () => {
     spotifyApi.getMyCurrentPlaybackState().then(({ body }) => {
-      if (body.is_playing) {
-        spotifyApi.pause()
-        setIsPlaying(false)
-      } else {
-        spotifyApi.play()
-        setIsPlaying(true)
+      if (currentTrackId) {
+        if (body?.is_playing) {
+          spotifyApi.pause()
+          setIsPlaying(false)
+        } else {
+          spotifyApi.play()
+          setIsPlaying(true)
+        }
       }
     })
   }
+
+  const debounceAdjustVolume = useCallback(debounce((volume) => {
+    spotifyApi.setVolume(volume).catch(console.log)
+  }, 400), [])
+
+  useEffect(() => {
+    // get current song at the begining when we dont have a currentTrackId setted
+    if (spotifyApi.getAccessToken() && !currentTrackId) {
+      setVolume(50)
+      fetchCurrentSong()
+    }
+  }, [currentTrackId, spotifyApi, session])
+
+  useEffect(() => {
+    if (volume > 0 && volume < 100) {
+      debounceAdjustVolume(volume)
+    }
+  }, [volume])
 
   return (
     <div className='h-24 bg-gradient-to-b from-black to-gray-900
@@ -52,8 +65,10 @@ export const Player = () => {
     >
       {/* Left section */}
       <div className='flex items-center space-x-4'>
-        <div className=''>
-          <img className='hidden md:inline h-16 w-16' src={songInfo?.album.images?.[0].url} alt='' />
+        <div>
+          {
+            currentTrackId && <img className='hidden md:inline h-16 w-16' src={songInfo?.album.images?.[0].url} alt='' />
+          }
         </div>
         <div>
           <h3 className='w-28 md:w-40 truncate'>{songInfo?.name}</h3>
@@ -71,6 +86,18 @@ export const Player = () => {
         }
         <ForwardIcon className='button' />
         <ArrowPathRoundedSquareIcon className='button' />
+      </div>
+      {/* Right section */}
+      <div className='flex items-center space-x-3 md:space-x-4 justify-end pr-5'>
+        <VolumeDownIcon onClick={() => volume > 0 && setVolume(volume - 10)} className='button' />
+        <input
+          className='w-14 md:w-28'
+          type='range' value={volume}
+          min={0}
+          max={100}
+          onChange={e => setVolume(Number(e.target.value))}
+        />
+        <VolumeUpIcon onClick={() => volume < 100 && setVolume(volume + 10)} className='button' />
       </div>
     </div>
   )
