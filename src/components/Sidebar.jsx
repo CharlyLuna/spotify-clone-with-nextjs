@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { signOut, useSession } from 'next-auth/react'
+import { useSession } from 'next-auth/react'
 import {
   HomeIcon,
   BuildingLibraryIcon,
@@ -13,9 +13,9 @@ import { useRecoilState } from 'recoil'
 import { playlistIdState } from '@/atoms/playlistAtom'
 
 export const Sidebar = () => {
-  const { data: session, status } = useSession()
+  const { data: session } = useSession()
   const [playlists, setPlaylists] = useState([])
-  const [playlistId, setPlaylistId] = useRecoilState(playlistIdState)
+  const [, setPlaylistId] = useRecoilState(playlistIdState)
   const spotifyApi = useSpotify()
 
   useEffect(() => {

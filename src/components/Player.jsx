@@ -14,6 +14,7 @@ export const Player = () => {
   const [isPlaying, setIsPlaying] = useRecoilState(isPlayingState)
   const { data: session } = useSession()
   const [volume, setVolume] = useState(50)
+  const [device, setDevice] = useState(null)
   const songInfo = useSongInfo()
 
   const fetchCurrentSong = () => {
@@ -29,7 +30,7 @@ export const Player = () => {
 
   const handlePlayPause = () => {
     spotifyApi.getMyCurrentPlaybackState().then(({ body }) => {
-      if (currentTrackId) {
+      if (currentTrackId && device !== null) {
         if (body?.is_playing) {
           spotifyApi.pause()
           setIsPlaying(false)
@@ -59,6 +60,29 @@ export const Player = () => {
     }
   }, [volume])
 
+  useEffect(() => {
+    const getDevices = async () => {
+      const { body } = await spotifyApi.getMyDevices()
+      if (body.devices.length <= 0) {
+        setDevice(null)
+      } else {
+        setDevice(body.devices[0].id)
+      }
+    }
+    getDevices()
+  }, [spotifyApi, currentTrackId])
+
+  const handleSkipTrack = async () => {
+    // if (device !== null && currentTrackId) {
+    //   console.log('skipped')
+    //   spotifyApi.skipToNext({
+    //     device_id: device
+    //   })
+    //   setIsPlaying(true)
+    // }
+    console.log('skipped track')
+  }
+
   return (
     <div className='h-24 bg-gradient-to-b from-black to-gray-900
     text-white grid grid-cols-3 text-xs md:text-base md:px-8'
@@ -84,8 +108,12 @@ export const Player = () => {
             ? <PauseCircleIcon onClick={handlePlayPause} className='button h-10 w-10' />
             : <PlayCircleIcon onClick={handlePlayPause} className='button h-10 w-10' />
         }
-        <ForwardIcon className='button' />
-        <ArrowPathRoundedSquareIcon className='button' />
+        <ForwardIcon
+          onClick={handleSkipTrack} className='button'
+        />
+        <ArrowPathRoundedSquareIcon
+          className='button'
+        />
       </div>
       {/* Right section */}
       <div className='flex items-center space-x-3 md:space-x-4 justify-end pr-5'>

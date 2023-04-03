@@ -5,8 +5,9 @@ import { useRecoilState } from 'recoil'
 
 export const Song = ({ track, order }) => {
   const spotifyApi = useSpotify()
-  const [currentTrackId, setCurrentTrackId] = useRecoilState(currentTrackIdState)
-  const [isPlaying, setIsPlaying] = useRecoilState(isPlayingState)
+  const [, setCurrentTrackId] = useRecoilState(currentTrackIdState)
+  const [, setIsPlaying] = useRecoilState(isPlayingState)
+  // const playlist = useRecoilValue(playlistState)
 
   const playSong = async () => {
     // Spotify api doesnt work without oficial spotify app open
@@ -19,6 +20,8 @@ export const Song = ({ track, order }) => {
     setIsPlaying(true)
     spotifyApi.play({
       uris: [track.uri],
+      // context_uri: playlist.uri,
+      // offset: { position: order },
       device_id: body.devices[0].id
     })
   }
@@ -34,7 +37,7 @@ export const Song = ({ track, order }) => {
         <img className='h-10 w-10' src={track.album.images?.[0].url} />
         <div>
           <p className='w-36 lg:w-64 truncate text-white'>{track.name}</p>
-          <p className='w-40'>{track.artists[0].name}</p>
+          <p className='w-36 lg:w-64 truncate'>{track.artists[0].name}</p>
         </div>
       </div>
       <div className='flex items-center justify-between ml-auto
